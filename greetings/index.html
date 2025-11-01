@@ -610,7 +610,8 @@ I’ll be here for you, in every moment, good or bad. Whatever we go through, we
                 },
                 {
                     // Fase 4: Puncak/Penutup
-                    image: "assets\\photos\\2.jpeg",
+                    image: null,
+                    useSlideshow: true,
                     message: `I love you. 💖
 Today, tomorrow, and for as long as life allows.
 
@@ -714,13 +715,39 @@ Happy Birthday, sayang. 🎉✨`,
         // ============================================
         // PHASE MANAGEMENT
         // ============================================
+        let slideshowIndex = 0;
+        let slideshowInterval = null;
+
+        function startSlideshow() {
+            clearInterval(slideshowInterval);
+
+            // Set foto pertama
+            messageImage.src = slideshowPhotos[0];
+            messageImage.classList.add("visible");
+
+            slideshowInterval = setInterval(() => {
+                slideshowIndex = (slideshowIndex + 1) % slideshowPhotos.length;
+
+                // Fade-out
+                messageImage.classList.remove("visible");
+
+                setTimeout(() => {
+                    messageImage.src = slideshowPhotos[slideshowIndex];
+                    messageImage.classList.add("visible");
+                }, 400); // waktu fade out
+            }, 2500); // ganti foto tiap 2.5 detik
+        }
+
         function showPhase(phaseIndex) {
             if (phaseIndex >= config.phases.length) return;
 
             const phase = config.phases[phaseIndex];
             
             // Update image
-            if (phase.image) {
+            if (phase.useSlideshow) {
+                startSlideshow();
+            } else if (phase.image) {
+                clearInterval(slideshowInterval);
                 messageImage.src = phase.image;
                 messageImage.classList.remove('visible');
                 setTimeout(() => {
@@ -777,10 +804,33 @@ Happy Birthday, sayang. 🎉✨`,
             startHeartAnimation(false);
             
             if (!audioStarted && bgMusic.querySelector('source')) {
-                 // Play audio 1
-                bgMusic.play().catch(e => {
-                    console.log('Audio 1 autoplay prevented:', e);
+
+                // mulai lagu pertama
+                bgMusic.volume = 1;
+                bgMusic.play().catch(err => console.log("Music1 autoplay blocked:", err));
+
+                // pause lagu kedua dulu
+                bgMusic2.pause();
+                bgMusic2.currentTime = 0;
+                bgMusic2.volume = 1;
+
+
+                // jika lagu pertama selesai → play lagu kedua
+                bgMusic.addEventListener("ended", () => {
+                    bgMusic2.currentTime = 0;
+                    bgMusic2.play().catch(err => console.log("Music2 play blocked:", err));
                 });
+
+                // jika lagu kedua selesai → ulang lagi lagu pertama
+                bgMusic2.addEventListener("ended", () => {
+                    bgMusic.currentTime = 0;
+                    bgMusic.play().catch(err => console.log("Music1 replay blocked:", err));
+                });
+
+                //  // Play audio 1
+                // bgMusic.play().catch(e => {
+                //     console.log('Audio 1 autoplay prevented:', e);
+                // });
                 
                 // // Unlock audio 2 di mobile (muted, pause immediately)
                 // const unlockAudio2 = bgMusic2.play().then(() => {
