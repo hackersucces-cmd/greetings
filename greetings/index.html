@@ -777,25 +777,39 @@ Happy Birthday, sayang. 🎉✨`,
             startHeartAnimation(false);
             
             if (!audioStarted && bgMusic.querySelector('source')) {
+                 // Play audio 1
                 bgMusic.play().catch(e => {
                     console.log('Audio 1 autoplay prevented:', e);
                 });
                 
-                // Pre-load audio 2 (mute dulu, cuma buat unlock)
-                bgMusic2.volume = 0;
-                bgMusic2.play().then(() => {
+                // Unlock audio 2 di mobile (muted, pause immediately)
+                const unlockAudio2 = bgMusic2.play().then(() => {
                     bgMusic2.pause();
                     bgMusic2.currentTime = 0;
-                    bgMusic2.volume = 1;
-                }).catch(e => console.log('Audio 2 unlock failed:', e));
+                }).catch(e => {
+                    console.log('Audio 2 unlock failed:', e);
+                });
                 
+                // Setelah audio 1 selesai, delay 2 detik lalu play audio 2
                 bgMusic.addEventListener('ended', function() {
                     setTimeout(() => {
+                        // Reset audio 2 ke awal sebelum play
+                        bgMusic2.currentTime = 0;
                         bgMusic2.play().catch(e => {
                             console.log('Audio 2 play error:', e);
                         });
                     }, 2000);
+                }, { once: true }); // once: true = event listener cuma jalan 1x
+
+                bgMusic2.addEventListener('ended', function() {
+                    setTimeout(() => {
+                        bgMusic.currentTime = 0;
+                        bgMusic.play().catch(e => {
+                            console.log('Audio 1 replay error:', e);
+                        });
+                    }, 2000);
                 });
+                
                 audioStarted = true;
             }
         });
